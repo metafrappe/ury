@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 import frappe
-from frappe.tests.utils import FrappeTestCase
+from frappe.tests import UnitTestCase
 
 from ury.setup.setup_wizard import get_setup_stages, load_demo_masters, load_demo_pos, load_demo_transactions
 from ury.ury.api.minimal.setup_organization import (
@@ -11,7 +11,7 @@ from ury.ury.api.minimal.setup_organization import (
 )
 
 
-class TestUrySetupStages(FrappeTestCase):
+class TestUrySetupStages(UnitTestCase):
 	def test_empty_without_demo_flag(self):
 		self.assertEqual(get_setup_stages(None), [])
 		self.assertEqual(get_setup_stages({}), [])
@@ -30,7 +30,7 @@ class TestUrySetupStages(FrappeTestCase):
 		self.assertEqual(len(get_setup_stages({"setup_ury_demo": True})), 3)
 
 
-class TestNormalizeSetupPayload(FrappeTestCase):
+class TestNormalizeSetupPayload(UnitTestCase):
 	def test_forwards_ury_demo_and_omits_erpnext_demo(self):
 		payload = _normalize_setup_payload(
 			{
@@ -49,7 +49,7 @@ class TestNormalizeSetupPayload(FrappeTestCase):
 		self.assertEqual(payload["setup_ury_demo"], 0)
 
 
-class TestGetSetupProgressSteps(FrappeTestCase):
+class TestGetSetupProgressSteps(UnitTestCase):
 	@patch("frappe.desk.page.setup_wizard.setup_wizard.get_setup_stages")
 	def test_includes_erpnext_then_ury_when_demo_on(self, mock_stages):
 		mock_stages.return_value = [
@@ -76,7 +76,7 @@ class TestGetSetupProgressSteps(FrappeTestCase):
 		self.assertEqual(mock_stages.call_args.args[0].setup_ury_demo, 1)
 
 
-class TestSubmitSetupPayload(FrappeTestCase):
+class TestSubmitSetupPayload(UnitTestCase):
 	@patch("ury.ury.api.minimal.setup_organization.setup_complete", return_value={"status": "ok"})
 	@patch("ury.ury.api.minimal.setup_organization.frappe.db.get_single_value", return_value=0)
 	def test_submit_setup_passes_ury_demo_not_erpnext_demo(self, _mock_settings, mock_complete):

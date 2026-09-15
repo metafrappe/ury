@@ -51,6 +51,9 @@ jobs:
           cd "$RUNNER_TEMP/frappe-bench"
           bench get-app --skip-assets --branch v16.34.2 https://github.com/frappe/erpnext.git
           bench get-app --skip-assets --branch v16.18.1 https://github.com/frappe/hrms.git
+          bench get-app --skip-assets --branch version-16 https://github.com/frappe/payments.git
+          git -C apps/payments fetch --depth 1 https://github.com/frappe/payments.git cca07d9f9392e2ea0e521c5975151db9e4b6c321
+          git -C apps/payments checkout cca07d9f9392e2ea0e521c5975151db9e4b6c321
           bench get-app --skip-assets ury "$GITHUB_WORKSPACE"
           test "$(git -C apps/frappe rev-parse HEAD)" = 988e54f3c4c291e2077a83809663f123731abe76
           test "$(git -C apps/erpnext rev-parse HEAD)" = 4048fb70e14d1843956fcdabb7c3cca75a1cbcdd
@@ -67,6 +70,7 @@ jobs:
           bench --site test_ury set-config allow_tests true
           bench --site test_ury set-config developer_mode 1
           bench --site test_ury install-app erpnext
+          bench --site test_ury install-app payments
           bench --site test_ury install-app hrms
           bench --site test_ury install-app ury
           bench --site test_ury migrate
