@@ -56,6 +56,28 @@ class TestV16Compatibility(UnitTestCase):
 			with self.assertRaisesRegex(RuntimeError, "custom fields failed"):
 				install.after_install()
 
+	def test_fresh_installation_selects_pos_invoice_mode(self):
+		settings = MagicMock(invoice_type="Sales Invoice")
+		with (
+			patch.object(frappe.db, "get_single_value", return_value=0),
+			patch.object(frappe.db, "exists", return_value=False),
+			patch.object(frappe, "get_doc", return_value=settings),
+		):
+			install.configure_fresh_site_pos_mode()
+		self.assertEqual(settings.invoice_type, "POS Invoice")
+		settings.save.assert_called_once_with()
+
+	def test_installation_preserves_existing_sites_pos_mode(self):
+		for setup_complete, company_exists in [(1, False), (0, True)]:
+			with (
+				self.subTest(setup_complete=setup_complete, company_exists=company_exists),
+				patch.object(frappe.db, "get_single_value", return_value=setup_complete),
+				patch.object(frappe.db, "exists", return_value=company_exists),
+				patch.object(frappe, "get_doc") as get_doc,
+			):
+				install.configure_fresh_site_pos_mode()
+			get_doc.assert_not_called()
+
 	def test_table_release_does_not_commit_the_callers_transaction(self):
 		# POS Invoice cancellation calls this helper from a document hook.
 		# Frappe v16 forbids committing there; a rollback must still work.

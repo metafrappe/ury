@@ -43,6 +43,7 @@ def run():
 		}
 	)
 	assert frappe.db.exists("Company", company), "Organization setup did not create the company"
+	assert frappe.db.get_single_value("POS Settings", "invoice_type") == "POS Invoice"
 	print("PASS organization setup", flush=True)
 
 	customer = frappe.get_doc(

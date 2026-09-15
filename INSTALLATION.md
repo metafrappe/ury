@@ -44,6 +44,13 @@ bench --site ury-test.localhost migrate
 Open `/ury` and complete the organization and restaurant setup. `/pos` is the
 cashier interface; `/mosaic` is the kitchen display. Frappe Desk uses `/desk`.
 
+URY uses **POS Invoice** mode. ERPNext v16 defaults new sites to **Sales Invoice**
+mode, so this fork selects POS Invoice during installation on a fresh site before
+organization setup. Installing URY on an existing site preserves its setting:
+before using URY there, close open POS sessions and select **POS Settings →
+Invoice Type Created via POS Screen → POS Invoice**. This is a site-wide setting
+and also affects ERPNext's own POS screen.
+
 ## Frappe Press
 
 Add `metafrappe/ury`, branch `version-16`, to the existing v16 bench group and
