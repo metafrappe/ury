@@ -60,7 +60,11 @@ def run():
 	)
 	assert cash_account, "Company setup must create a cash account"
 	cash = frappe.get_doc("Mode of Payment", "Cash")
-	cash.append("accounts", {"company": company, "default_account": cash_account})
+	company_account = next((row for row in cash.accounts if row.company == company), None)
+	if company_account:
+		company_account.default_account = cash_account
+	else:
+		cash.append("accounts", {"company": company, "default_account": cash_account})
 	cash.save()
 
 	configured = submit_configure_data(
