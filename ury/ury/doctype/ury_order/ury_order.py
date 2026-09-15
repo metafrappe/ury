@@ -1604,7 +1604,7 @@ def item_query_restaurant(
     as_dict=False,
 ):
     """Return items that are selected in active menu of the restaurant"""
-    restaurant, menu = get_restaurant_and_menu_name(filters["table"])
+    _, menu, _ = get_restaurant_and_menu_name(filters["table"])
     items = frappe.db.get_all("URY Menu Item", ["item"], dict(parent=menu, disabled=0))
     del filters["table"]
     filters["name"] = ("in", [d.item for d in items])

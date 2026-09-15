@@ -59,6 +59,12 @@ bench --site ury-test.localhost set-config allow_tests true
 bench --site ury-test.localhost run-tests --module ury.tests.test_v16_compatibility
 ```
 
+The [v16 CI workflow](https://github.com/metafrappe/ury/actions/workflows/v16-compatibility.yml)
+installs Frappe 16.33.1, ERPNext 16.34.2 and HRMS 16.18.1, checks the exact
+revisions, installs and migrates URY, builds all five frontends, runs the regression
+tests and exercises a cash sale and cancellation on a disposable restaurant.
+The smoke test is restricted to the `test_ury` CI site and must not run on customer sites.
+
 Before using a new revision, also verify fresh installation, migration, all five
 frontend builds, organization setup, restaurant setup, cashier opening, table
 orders, KOT creation, payment, cancellation and closing on the intended Frappe,

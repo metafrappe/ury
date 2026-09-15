@@ -91,6 +91,19 @@ class TestV16Compatibility(UnitTestCase):
 		self.assertEqual(invoice.restaurant, "Restaurant 1")
 		invoice.submit.assert_called_once()
 
+	def test_restaurant_item_search_accepts_branch_menu_restaurant_result(self):
+		with (
+			patch.object(
+				ury_order,
+				"get_restaurant_and_menu_name",
+				return_value=("Branch 1", "Menu 1", "Restaurant 1"),
+			),
+			patch.object(frappe.db, "get_all", return_value=[frappe._dict(item="Coffee")]),
+			patch.object(ury_order, "item_query", autospec=True, return_value=[["Coffee"]]),
+		):
+			items = ury_order.item_query_restaurant(filters={"table": "Table 1"})
+		self.assertEqual(items, [["Coffee"]])
+
 	def test_draft_order_cancellation_does_not_use_submitted_document_workflow(self):
 		invoice = MagicMock(docstatus=0, restaurant_table="Table 1")
 		invoice.cancel.side_effect = AssertionError("Frappe cannot cancel a draft document")

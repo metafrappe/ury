@@ -80,3 +80,7 @@ jobs:
           cd "$RUNNER_TEMP/frappe-bench"
           bench --site test_ury run-tests --app ury --module ury.tests.test_v16_compatibility --skip-before-tests
           bench --site test_ury run-tests --app ury --module ury.setup.test_setup_wizard --skip-before-tests
+      - name: Exercise restaurant ordering and cashier workflow
+        run: |
+          cd "$RUNNER_TEMP/frappe-bench"
+          bench --site test_ury execute ury.tests.v16_smoke.run
