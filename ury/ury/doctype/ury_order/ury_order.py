@@ -366,7 +366,7 @@ TABLE_RELEASE_FIELDS = {
 
 
 def release_merge_cluster_tables(table_or_tables):
-
+    """Release tables within the caller's transaction (also used by document hooks)."""
     if isinstance(table_or_tables, (list, tuple, set)):
         cluster = list(table_or_tables)
     else:
@@ -379,8 +379,6 @@ def release_merge_cluster_tables(table_or_tables):
             TABLE_RELEASE_FIELDS,
             update_modified=False,
         )
-
-    frappe.db.commit()
 
 @frappe.whitelist()
 def release_tables_after_print(invoice):
@@ -1917,9 +1915,6 @@ def cancel_order(invoice_id, reason):
         # If an exception occurs (e.g., "kot" app not found), it will be caught here without effecting execution
         pass
 
-    # Use standard Frappe cancel workflow instead of raw SQL
-    pos_invoice.db_set("cancel_reason", reason)
-    pos_invoice.cancel()
     if pos_invoice.docstatus == 1:
         # Submitted invoice: cancel through the standard document workflow so
         # on_cancel hooks run and GL/payment reversals and audit entries are
@@ -2001,7 +1996,7 @@ def make_invoice(customer, payments, cashier, pos_profile,owner, additionalDisco
     invoice = get_order_invoice(table, invoice, order_type, "Payments")
 
     if table:
-        restaurant = get_restaurant_and_menu_name(table)
+        _, _, restaurant = get_restaurant_and_menu_name(table)
         invoice.restaurant = restaurant
 
     invoice.customer = customer

@@ -1,0 +1,82 @@
+name: Frappe v16 compatibility
+
+on:
+  push:
+    branches: [version-16]
+  pull_request:
+    branches: [version-16]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v16-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  install-build-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: ci_root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=2s --health-retries=12
+    env:
+      CI: "true"
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y redis-server mariadb-client libcups2-dev libmariadb-dev
+          python -m pip install frappe-bench
+          npm install --global yarn@1.22.22
+      - name: Create bench with the versions deployed on Metaframer
+        run: |
+          bench init --skip-assets --frappe-branch v16.33.1 --python "$(command -v python)" "$RUNNER_TEMP/frappe-bench"
+          cd "$RUNNER_TEMP/frappe-bench"
+          bench get-app --skip-assets --branch v16.34.2 https://github.com/frappe/erpnext.git
+          bench get-app --skip-assets --branch v16.18.1 https://github.com/frappe/hrms.git
+          bench get-app --skip-assets ury "$GITHUB_WORKSPACE"
+          test "$(git -C apps/frappe rev-parse HEAD)" = 988e54f3c4c291e2077a83809663f123731abe76
+          test "$(git -C apps/erpnext rev-parse HEAD)" = 4048fb70e14d1843956fcdabb7c3cca75a1cbcdd
+          test "$(git -C apps/hrms rev-parse HEAD)" = a4768b441cff346def505e27f2a2229ee1e05b9b
+          bench setup requirements --dev
+          bench pip check
+          redis-server config/redis_cache.conf --daemonize yes
+          redis-server config/redis_queue.conf --daemonize yes
+      - name: Fresh installation and migration
+        run: |
+          cd "$RUNNER_TEMP/frappe-bench"
+          mariadb --host 127.0.0.1 --port 3306 -u root -pci_root -e "SET GLOBAL character_set_server = 'utf8mb4'; SET GLOBAL collation_server = 'utf8mb4_unicode_ci';"
+          bench new-site test_ury --db-host 127.0.0.1 --db-port 3306 --db-root-username root --db-root-password ci_root --mariadb-user-host-login-scope '%' --admin-password ci_admin
+          bench --site test_ury set-config allow_tests true
+          bench --site test_ury set-config developer_mode 1
+          bench --site test_ury install-app erpnext
+          bench --site test_ury install-app hrms
+          bench --site test_ury install-app ury
+          bench --site test_ury migrate
+          bench --site test_ury list-apps
+      - name: Build all five URY frontends
+        run: |
+          cd "$RUNNER_TEMP/frappe-bench"
+          bench build --app ury
+      - name: Run compatibility and setup regressions
+        run: |
+          cd "$RUNNER_TEMP/frappe-bench"
+          bench --site test_ury run-tests --app ury --module ury.tests.test_v16_compatibility --skip-before-tests
+          bench --site test_ury run-tests --app ury --module ury.setup.test_setup_wizard --skip-before-tests

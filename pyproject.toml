@@ -4,12 +4,17 @@ authors = [
     { name = "Tridz Technologies", email = "info@tridz.com"}
 ]
 description = "A Complete Restaurant Order Taking Software"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
-    # "frappe~=15.0.0" # Installed and managed by bench.
+    # Frappe apps are installed and managed by bench.
 ]
+
+[tool.bench.frappe-dependencies]
+frappe = ">=16.0.0,<17.0.0"
+erpnext = ">=16.0.0,<17.0.0"
+hrms = ">=16.0.0,<17.0.0"
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]

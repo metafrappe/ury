@@ -122,6 +122,12 @@
  "quick_lists": [],
  "roles": [
   {
+   "role": "System Manager"
+  },
+  {
+   "role": "URY Admin"
+  },
+  {
    "role": "URY Captain"
   },
   {

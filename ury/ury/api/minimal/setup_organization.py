@@ -1,8 +1,8 @@
 import frappe
-from frappe.desk.page.setup_wizard.setup_wizard import load_languages, load_country, setup_complete
+from frappe.desk.page.setup_wizard.setup_wizard import load_languages, setup_complete
 from frappe.geo.country_info import get_country_info, get_all
 from erpnext.accounts.doctype.account.chart_of_accounts.chart_of_accounts import get_charts_for_country
-import pytz
+from zoneinfo import available_timezones
 import json
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
@@ -13,16 +13,8 @@ def get_setup_defaults():
         frappe.throw("Not permitted")
         
     languages = load_languages()
-    country_data = load_country()
-    if isinstance(country_data, str):
-        detected_country = country_data
-    elif isinstance(country_data, dict):
-        detected_country = country_data.get("country", "")
-    else:
-        detected_country = ""
-        
-    if not detected_country:
-        detected_country = frappe.db.get_single_value("System Settings", "country") or "India"
+    # Frappe v16 removed GeoIP country detection and load_country().
+    detected_country = frappe.db.get_single_value("System Settings", "country") or "India"
     
     countries_dict = get_all()
     countries = list(countries_dict.keys())
@@ -30,7 +22,7 @@ def get_setup_defaults():
     currencies_set = set()
     currencies = []
     
-    timezones = pytz.all_timezones
+    timezones = sorted(available_timezones())
     
     for c_name, c_info in countries_dict.items():
         if "currency" in c_info:
