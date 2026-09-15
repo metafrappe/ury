@@ -1,2 +1,0 @@
-# frappe -- https://github.com/frappe/frappe is installed via 'bench init'
-# This branch requires Frappe/ERPNext/HRMS v16, Python >=3.14 and Node.js >=24.
